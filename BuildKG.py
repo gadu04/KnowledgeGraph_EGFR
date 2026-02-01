@@ -1,21 +1,14 @@
 import pandas as pd
 import numpy as np
-from neo4j import GraphDatabase
-from rdkit import Chem
-from rdkit.Chem import AllChem, Fragments
-from rdkit.Chem.Scaffolds import MurckoScaffold
-from rdkit import DataStructs
-import warnings
+import os
+from dotenv import load_dotenv
 
-# Tắt cảnh báo RDKit
-warnings.filterwarnings('ignore')
+load_dotenv()
 
-# =============================================================================
-# 1. CẤU HÌNH HỆ THỐNG
-# =============================================================================
-NEO4J_URI = "bolt://localhost:7687"
-NEO4J_USER = "neo4j"
-NEO4J_PASSWORD = "12345678"
+# NEW:
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+NEO4J_USER = os.getenv("NEO4J_USER", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD")
 
 # --- MODIFIED: Support both experimental and de novo data ---
 EXPERIMENTAL_CSV_PATH = "Data/data_end.csv"
@@ -369,4 +362,4 @@ def main():
     print("="*80)
 
 if __name__ == "__main__":
-    main()                 
+    main()
