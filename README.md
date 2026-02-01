@@ -1,104 +1,141 @@
 # Drug Knowledge Graph for EGFR Inhibitor Prediction
 
-## 🚀 Quick Start
+## 🎯 Giới thiệu
+
+Dự án xây dựng **Knowledge Graph** cho dự đoán hoạt tính của chất ức chế EGFR, kết hợp:
+- **KANO Architecture**: Knowledge-Aware Neural Operator
+- **HGT Model**: Heterogeneous Graph Transformer
+- **GraphSAGE**: Graph Sample and Aggregate
+- **Neo4j**: Graph Database
+
+---
+
+## 📂 Cấu trúc thư mục (REFACTORED)
+
+```
+KnowledgeGraph_EGFR/
+├── src/                           # Source code
+│   ├── config/                    # Cấu hình toàn cục
+│   ├── kg/                        # Knowledge Graph builder
+│   ├── models/                    # ML Models (HGT, GraphSAGE)
+│   ├── preprocessing/             # Data preprocessing
+│   ├── evaluation/                # Model evaluation
+│   └── utils/                     # Utilities (chemistry.py)
+├── scripts/                       # Executable scripts
+│   └── build_kg.py                # Build Knowledge Graph
+├── notebooks/                     # Jupyter notebooks
+│   ├── experiments/               # Stability tests
+│   └── exploratory/               # Benchmark analysis
+├── data/
+│   ├── processed/                 # data_end.csv, DeNovo_Molecule.csv
+│   └── results/                   # multi_seed_results*.csv
+├── tests/                         # Unit tests
+├── archive/                       # Backup code cũ
+└── neo4j_data/                    # Neo4j database (gitignored)
+```
+
+---
+
+## 🚀 Cài đặt
 
 ### Prerequisites
 - [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) hoặc [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-- Neo4j Database (sử dụng Docker hoặc local)
+- [Docker](https://www.docker.com/) (cho Neo4j)
 
-### Installation
-
-**Option 1: Sử dụng Conda (Khuyến nghị)**
+### Bước 1: Clone repository
 
 ```bash
-# Clone repository
-git clone https://github.com/your-username/Drug-KG.git
-cd Drug-KG
+git clone https://github.com/gadu04/KnowledgeGraph_EGFR.git
+cd KnowledgeGraph_EGFR
+```
 
-# Tạo môi trường từ file environment.yml
+### Bước 2: Tạo môi trường Conda
+
+```bash
 conda env create -f environment.yml
-
-# Kích hoạt môi trường
 conda activate egfr_ml
 ```
 
-**Option 2: Sử dụng pip**
+### Bước 3: Cấu hình môi trường
 
-```bash
-# Tạo môi trường mới
-conda create -n egfr_ml python=3.10
-conda activate egfr_ml
-
-# Cài RDKit qua conda (quan trọng!)
-conda install -c conda-forge rdkit
-
-# Cài các package còn lại
-pip install -r requirements.txt
-```
-
-### Setup Environment
-
-1. **Tạo file `.env`:**
 ```bash
 cp .env.example .env
+# Chỉnh sửa .env với mật khẩu Neo4j của bạn
 ```
 
-2. **Chỉnh sửa `.env`:**
-```env
-NEO4J_URI=bolt://localhost:7687
-NEO4J_USER=neo4j
-NEO4J_PASSWORD=your_password_here
-```
+### Bước 4: Khởi động Neo4j
 
-3. **Khởi động Neo4j:**
 ```bash
 docker-compose up -d
 ```
 
-### Build Knowledge Graph
+---
+
+## 📊 Sử dụng
+
+### 1. Build Knowledge Graph
 
 ```bash
-python BuildKG.py
+python scripts/build_kg.py
 ```
 
-### Run Experiments
+### 2. Chạy thí nghiệm
 
+**HGT Model:**
 ```bash
-# Mở Jupyter Notebook
-jupyter notebook
-
-# Hoặc chạy stability test trực tiếp
-jupyter nbconvert --to notebook --execute stability_test_hgt.ipynb
+jupyter notebook notebooks/experiments/stability_test_hgt.ipynb
 ```
 
-## 📂 Project Structure
-
-```
-Drug-KG/
-├── BuildKG.py              # Xây dựng Knowledge Graph
-├── bench.ipynb            # Benchmark so sánh ECFP4 vs KG
-├── stability_test_hgt.ipynb      # Test ổn định HGT model
-├── stability_test_graphsage.ipynb # Test ổn định GraphSAGE
-├── Data/
-│   ├── data_end.csv       # Dữ liệu experimental
-│   └── DeNovo_Molecule.csv # Dữ liệu de novo
-├── environment.yml         # Conda environment
-├── requirements.txt        # Pip requirements
-└── .env                   # Cấu hình (không commit)
+**GraphSAGE Model:**
+```bash
+jupyter notebook notebooks/experiments/stability_test_graphsage.ipynb
 ```
 
-## 🔐 Security Note
+**Benchmark:**
+```bash
+jupyter notebook notebooks/exploratory/bench.ipynb
+```
+
+---
+
+## 🧪 Kiến trúc Knowledge Graph
+
+### Node Types
+- **Molecule**: Phân tử (experimental/virtual)
+- **Scaffold**: Murcko scaffold
+- **Target**: EGFR_WT, EGFR_T790M, EGFR_Generic
+- **Warhead**: Acrylamide, Propynamide, etc.
+- **MoA**: Covalent/Reversible Inhibitor
+- **FunctionalGroup**: Quinazoline_Core, Aniline_Group, etc.
+
+### Relationships
+- `(Molecule)-[:HAS_SCAFFOLD]->(Scaffold)`
+- `(Molecule)-[:TESTED_AGAINST]->(Target)`
+- `(Molecule)-[:POTENT_AGAINST]->(Target)` (active only)
+- `(Molecule)-[:CONTAINS_WARHEAD]->(Warhead)`
+- `(Molecule)-[:ACTS_VIA]->(MoA)`
+- `(Molecule)-[:HAS_FUNCTIONAL_GROUP]->(FunctionalGroup)`
+
+---
+
+## 📈 Kết quả
+
+Kết quả thí nghiệm trong [`data/results/`](data/results):
+- [`multi_seed_results.csv`](data/results/multi_seed_results.csv) - HGT (10 seeds)
+- [`multi_seed_results_graphsage.csv`](data/results/multi_seed_results_graphsage.csv) - GraphSAGE
+- [`multi_seed_results_corrected.csv`](data/results/multi_seed_results_corrected.csv) - Corrected
+
+**Metrics:** Accuracy, Precision, Recall, F1-score, ROC-AUC
+
+---
+
+## 🔐 Bảo mật
 
 ⚠️ **KHÔNG BAO GIỜ commit file `.env` lên Git!**
 
 File [`.gitignore`](.gitignore) đã được cấu hình để bỏ qua file này.
 
-## 📊 Results
-
-Kết quả thí nghiệm được lưu trong:
-- `multi_seed_results.csv` - HGT results
-- `multi_seed_results_graphsage.csv` - GraphSAGE results
-- `multi_seed_results_corrected.csv` - Corrected results
+---
 
 ## 🐛 Troubleshooting
 
@@ -108,9 +145,11 @@ conda install -c conda-forge rdkit
 ```
 
 **Lỗi Neo4j connection:**
-- Kiểm tra Docker: `docker ps`
-- Kiểm tra `.env` file
-- Kiểm tra port 7687 không bị chiếm
+```bash
+docker ps
+docker logs <container_id>
+docker-compose restart
+```
 
 **Lỗi PyTorch Geometric:**
 ```bash
