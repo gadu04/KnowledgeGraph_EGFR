@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import os
 from dotenv import load_dotenv
+from rdkit import Chem
+from rdkit.Chem import Fragments, MurckoScaffold
 
 load_dotenv()
 
@@ -159,64 +161,61 @@ class KANO_KG_Builder:
             print("✅ Đã tạo Index mới.")
 
     def import_batch(self, batch):
-        # --- MODIFIED: Support both experimental and virtual molecules ---
         query = """
-        UNWIND $batch AS row
-        
-        // 1. Tạo Molecule với phân biệt experimental vs virtual
-        MERGE (m:Molecule {smiles: row.smiles})
-        SET m.is_virtual = row.is_virtual,
-            m.source = row.source
-        
-        // --- DIVERGENCE POINT: Experimental vs Virtual ---
-        // Experimental molecules: set activity, ic50
-        FOREACH (_ IN CASE WHEN NOT row.is_virtual THEN [1] ELSE [] END |
-            SET m.activity = row.activity,
-                m.ic50 = row.ic50
-        )
-        
-        // Virtual molecules: set docking_affinity, ligand_id
-        FOREACH (_ IN CASE WHEN row.is_virtual THEN [1] ELSE [] END |
-            SET m.docking_affinity = row.docking_affinity,
-                m.ligand_id = row.ligand_id
-        )
-        
-        // 2. Tạo Scaffold (Khung sườn) - SAME FOR BOTH
-        MERGE (s:Scaffold {smiles: row.scaffold})
-        MERGE (m)-[:HAS_SCAFFOLD]->(s)
-        
-        // 3. Tạo Functional Prompts (KANO) - SAME FOR BOTH
-        FOREACH (fp_name IN row.functional_prompts |
-            MERGE (fp:FunctionalGroup {name: fp_name})
-            MERGE (m)-[:HAS_FUNCTIONAL_GROUP]->(fp)
-        )
-        
-        // 4. Tạo Warhead (Vũ khí) - SAME FOR BOTH
-        FOREACH (w_name IN row.warheads |
-            MERGE (w:Warhead {name: w_name})
-            MERGE (m)-[:CONTAINS_WARHEAD]->(w)
-        )
-        
-        // 5. Tạo MoA (Cơ chế) - SAME FOR BOTH
-        MERGE (moa:MoA {name: row.moa})
-        MERGE (m)-[:ACTS_VIA]->(moa)
-        
-        // 6. Tạo Target (Mục tiêu - Đã suy luận) - SAME FOR BOTH
-        MERGE (t:Target {name: row.target})
-        MERGE (m)-[:TESTED_AGAINST]->(t)
-        
-        // 7. Tạo POTENT_AGAINST ONLY for Active Experimental Molecules
-        // Virtual molecules NEVER get this relationship
-        FOREACH (_ IN CASE 
-            WHEN NOT row.is_virtual AND row.activity = 1 
-            THEN [1] 
-            ELSE [] 
-        END |
-            MERGE (m)-[:POTENT_AGAINST]->(t)
-        )
-        """
-        with self.driver.session() as session:
-            session.run(query, batch=batch)
+    UNWIND $batch AS row
+    
+    // 1. Tạo Molecule với phân biệt experimental vs virtual
+    MERGE (m:Molecule {smiles: row.smiles})
+    SET m.is_virtual = row.is_virtual,
+        m.source = row.source
+    
+    // Experimental molecules: set activity, ic50
+    FOREACH (_ IN CASE WHEN NOT row.is_virtual THEN [1] ELSE [] END |
+        SET m.activity = row.activity,
+            m.ic50 = row.ic50
+    )
+    
+    // Virtual molecules: set docking_affinity, ligand_id
+    FOREACH (_ IN CASE WHEN row.is_virtual THEN [1] ELSE [] END |
+        SET m.docking_affinity = row.docking_affinity,
+            m.ligand_id = row.ligand_id
+    )
+    
+    // 2. Tạo Scaffold
+    MERGE (s:Scaffold {smiles: row.scaffold})
+    MERGE (m)-[:HAS_SCAFFOLD]->(s)
+    
+    // 3. Tạo Functional Prompts
+    FOREACH (fp_name IN row.functional_prompts |
+        MERGE (fp:FunctionalGroup {name: fp_name})
+        MERGE (m)-[:HAS_FUNCTIONAL_GROUP]->(fp)
+    )
+    
+    // 4. Tạo Warhead
+    FOREACH (w_name IN row.warheads |
+        MERGE (w:Warhead {name: w_name})
+        MERGE (m)-[:CONTAINS_WARHEAD]->(w)
+    )
+    
+    // 5. Tạo MoA
+    MERGE (moa:MoA {name: row.moa})
+    MERGE (m)-[:ACTS_VIA]->(moa)
+    
+    // 6. Tạo Target
+    MERGE (t:Target {name: row.target})
+    MERGE (m)-[:TESTED_AGAINST]->(t)
+    
+    // ❌ XÓA PHẦN NÀY:
+    // FOREACH (_ IN CASE 
+    //     WHEN NOT row.is_virtual AND row.activity = 1 
+    //     THEN [1] 
+    //     ELSE [] 
+    // END |
+    //     MERGE (m)-[:POTENT_AGAINST]->(t)
+    // )
+    """
+    with self.driver.session() as session:
+        session.run(query, batch=batch)
 
 # =============================================================================
 # 5. MAIN PROGRAM - MODIFIED TO HANDLE BOTH DATA TYPES

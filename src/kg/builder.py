@@ -110,14 +110,14 @@ class KnowledgeGraphBuilder:
         MERGE (t:Target {name: row.target})
         MERGE (m)-[:TESTED_AGAINST]->(t)
         
-        // 7. POTENT_AGAINST (only for active experimental)
-        FOREACH (_ IN CASE 
-            WHEN NOT row.is_virtual AND row.activity = 1 
-            THEN [1] 
-            ELSE [] 
-        END |
-            MERGE (m)-[:POTENT_AGAINST]->(t)
-        )
+        // ❌ XÓA PHẦN NÀY:
+        // FOREACH (_ IN CASE 
+        //     WHEN NOT row.is_virtual AND row.activity = 1 
+        //     THEN [1] 
+        //     ELSE [] 
+        // END |
+        //     MERGE (m)-[:POTENT_AGAINST]->(t)
+        // )
         """
         with self.driver.session() as session:
             session.run(query, batch=batch)
