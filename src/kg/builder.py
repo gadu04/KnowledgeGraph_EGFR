@@ -74,12 +74,6 @@ class KnowledgeGraphBuilder:
         SET m.is_virtual = row.is_virtual,
             m.source = row.source
         
-        // Experimental properties
-        FOREACH (_ IN CASE WHEN NOT row.is_virtual THEN [1] ELSE [] END |
-            SET m.activity = row.activity,
-                m.ic50 = row.ic50
-        )
-        
         // Virtual properties
         FOREACH (_ IN CASE WHEN row.is_virtual THEN [1] ELSE [] END |
             SET m.docking_affinity = row.docking_affinity,
@@ -90,13 +84,13 @@ class KnowledgeGraphBuilder:
         MERGE (s:Scaffold {smiles: row.scaffold})
         MERGE (m)-[:HAS_SCAFFOLD]->(s)
         
-        // 3. Functional Groups
+        // 3. Functional Prompts
         FOREACH (fp_name IN row.functional_prompts |
             MERGE (fp:FunctionalGroup {name: fp_name})
             MERGE (m)-[:HAS_FUNCTIONAL_GROUP]->(fp)
         )
         
-        // 4. Warheads
+        // 4. Warhead
         FOREACH (w_name IN row.warheads |
             MERGE (w:Warhead {name: w_name})
             MERGE (m)-[:CONTAINS_WARHEAD]->(w)
@@ -109,15 +103,6 @@ class KnowledgeGraphBuilder:
         // 6. Target
         MERGE (t:Target {name: row.target})
         MERGE (m)-[:TESTED_AGAINST]->(t)
-        
-        // ❌ XÓA PHẦN NÀY:
-        // FOREACH (_ IN CASE 
-        //     WHEN NOT row.is_virtual AND row.activity = 1 
-        //     THEN [1] 
-        //     ELSE [] 
-        // END |
-        //     MERGE (m)-[:POTENT_AGAINST]->(t)
-        // )
         """
         with self.driver.session() as session:
             session.run(query, batch=batch)
@@ -140,17 +125,10 @@ class KnowledgeGraphBuilder:
             functional_prompts = get_functional_prompts(mol)
             target = predict_target(mol)
             
-            # Experimental properties
-            label = str(row['Final_Label']).lower()
-            activity = 1 if label == 'active' else 0
-            ic50 = float(row.get('IC50 value(nM)', 0))
-            
             item = {
                 'smiles': smiles,
                 'is_virtual': False,
                 'source': 'Experimental',
-                'activity': activity,
-                'ic50': ic50,
                 'docking_affinity': None,
                 'ligand_id': None,
                 'scaffold': scaffold,

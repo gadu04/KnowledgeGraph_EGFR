@@ -2,6 +2,7 @@
 from typing import List, Tuple, Optional
 from rdkit import Chem
 from rdkit.Chem import AllChem, Fragments, DataStructs
+from rdkit.Chem.rdFingerprintGenerator import GetMorganGenerator  # Thêm dòng này
 from rdkit.Chem.Scaffolds import MurckoScaffold
 import numpy as np
 
@@ -34,11 +35,12 @@ EGFR_SPECIFIC_SMARTS = {
 }
 
 # Initialize reference fingerprints
+_morgan_gen = GetMorganGenerator(radius=2, fpSize=1024)
 ref_fps = []
 for name, info in REF_DRUGS.items():
     mol = Chem.MolFromSmiles(info['smiles'])
     if mol:
-        fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=1024)
+        fp = _morgan_gen.GetFingerprint(mol)
         ref_fps.append({'name': name, 'fp': fp, 'target': info['target']})
 
 
@@ -69,7 +71,7 @@ def predict_target(mol: Chem.Mol, threshold: float = 0.35) -> str:
     if not mol:
         return "EGFR_Generic"
     
-    target_fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=1024)
+    target_fp = _morgan_gen.GetFingerprint(mol)
     max_sim = 0
     best_target = "EGFR_Generic"
     
@@ -135,7 +137,7 @@ def get_ecfp4(smiles_list: List[str], n_bits: int = 1024) -> np.ndarray:
     for smi in smiles_list:
         mol = Chem.MolFromSmiles(smi)
         if mol:
-            fp = AllChem.GetMorganFingerprintAsBitVect(mol, 2, nBits=n_bits)
+            fp = _morgan_gen.GetFingerprint(mol)
             fps.append(np.array(fp))
         else:
             fps.append(np.zeros(n_bits))
