@@ -1,0 +1,58 @@
+{
+  "Target_Info": {
+    "name": "HDAC8",
+    "full_name": "Histone Deacetylase 8",
+    "generic_label": "HDAC_Generic",
+    "similarity_threshold": 0.35
+  },
+
+  "Reference_Drugs": {
+    "Vorinostat": {
+      "smiles": "ONC(=O)CCCCCCC(=O)Nc1ccccc1",
+      "target": "Pan_HDAC"
+    },
+    "PCI-34051": {
+      "smiles": "COc1cc2c(cc1OC)CN(C(=O)c3ccc(cc3)C(=O)NO)C2",
+      "target": "HDAC8_Selective"
+    },
+    "Belinostat": {
+      "smiles": "ONC(=O)/C=C/c1cccc(S(=O)(=O)Nc2ccccc2)c1",
+      "target": "Pan_HDAC"
+    },
+    "Panobinostat": {
+      "smiles": "ONC(=O)/C=C/c1ccc(CNCCc2c[nH]c3ccccc23)cc1",
+      "target": "Pan_HDAC"
+    }
+  },
+
+  "Interaction_Groups": [
+    {
+      "name": "Hydroxamic_Acid",
+      "smarts": "C(=O)NO",
+      "moa": "Reversible_Inhibitor"
+    },
+    {
+      "name": "Benzamide",
+      "smarts": "NC(=O)c1ccccc1N",
+      "moa": "Reversible_Inhibitor"
+    },
+    {
+      "name": "Carboxylic_Acid",
+      "smarts": "C(=O)O",
+      "moa": "Reversible_Inhibitor"
+    },
+    {
+      "name": "Thiol",
+      "smarts": "[SH]",
+      "moa": "Reversible_Inhibitor"
+    }
+  ],
+
+  "Target_Specific_Rules": {
+    "ZBG_Hydroxamate": "C(=O)NO",
+    "Linker_Alkyl_Chain": "CCCCCC",
+    "Linker_Cinnamyl": "c1ccccc1/C=C/C(=O)",
+    "Cap_Phenyl": "c1ccccc1",
+    "Cap_Indole": "c1cc2c(cc1)[nH]cc2"
+  }
+}
