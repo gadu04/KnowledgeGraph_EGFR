@@ -1,69 +1,74 @@
 {
   "Target_Info": {
-    "name": "HIV",
-    "full_name": "Human Immunodeficiency Virus",
-    "generic_label": "HIV_Generic",
+    "name": "EGFR",
+    "full_name": "Epidermal Growth Factor Receptor",
+    "generic_label": "EGFR_Generic",
     "similarity_threshold": 0.35
   },
 
   "Reference_Drugs": {
-    "Zidovudine": {
-      "smiles": "Cc1cn([C@H]2C[C@@H](N=[N+]=[N-])[C@H](CO)O2)c(=O)[nH]c1=O",
-      "target": "HIV_RT_NRTI"
+    "Gefitinib": {
+      "smiles": "COc1cc2ncnc(Nc3ccc(F)c(Cl)c3)c2cc1OCCCN1CCOCC1",
+      "target": "EGFR_WT"
     },
-    "Nevirapine": {
-      "smiles": "Cc1ccnc2N(C3CC3)c3ccccc3C(=O)Nc12",
-      "target": "HIV_RT_NNRTI"
+    "Erlotinib": {
+      "smiles": "COCCOc1cc2ncnc(Nc3cccc(C#C)c3)c2cc1OCCOC",
+      "target": "EGFR_WT"
     },
-    "Darunavir": {
-      "smiles": "CC(C)CN(C[C@@H](O)[C@H](Cc1ccccc1)NC(=O)O[C@H]1CO[C@H]2[C@@H]1CCO2)S(=O)(=O)c1ccc(N)cc1",
-      "target": "HIV_Protease"
+    "Osimertinib": {
+      "smiles": "C=CC(=O)Nc1cc(Nc2ncnc3cc(N(C)CCN(C)C)c(OC)cc23)c(OC)cc1",
+      "target": "EGFR_T790M"
     },
-    "Dolutegravir": {
-      "smiles": "C[C@@H]1CCO[C@H]2CN(C(=O)c3c(=O)c4cnc(C(=O)NCc5c(F)cccc5F)c(=O)n4c(O)c32)C1",
-      "target": "HIV_Integrase"
+    "Rociletinib": {
+      "smiles": "CN(C)CCN(C)c1cc(Nc2ncc(C(F)(F)F)c(Nc3cc(C(=O)N)ccc3)n2)cc(N)n1",
+      "target": "EGFR_T790M"
     },
-    "Ritonavir": {
-      "smiles": "CC(C)c1nc(CN(C)C(=O)N[C@H](C(=O)N[C@@H](Cc2ccccc2)[C@@H](O)C[C@H](Cc2ccccc2)NC(=O)OCc2cncs2)C(C)(C)C)cs1",
-      "target": "HIV_Protease"
+    "Afatinib": {
+      "smiles": "CN(C)C/C=C/C(=O)Nc1cc2c(Nc3ccc(F)c(Cl)c3)ncnc2cc1O[C@H]3CCOC3",
+      "target": "EGFR_WT"
     }
   },
 
   "Interaction_Groups": [
     {
-      "name": "Sulfonamide",
-      "smarts": "S(=O)(=O)N",
-      "moa": "Protease_Inhibitor"
+      "name": "Acrylamide",
+      "smarts": "C=CC(=O)N",
+      "moa": "Covalent_Inhibitor"
     },
     {
-      "name": "Azide",
-      "smarts": "N=[N+]=[N-]",
-      "moa": "Chain_Termination_NRTI"
+      "name": "Propynamide",
+      "smarts": "C#CC(=O)N",
+      "moa": "Covalent_Inhibitor"
     },
     {
-      "name": "Metal_Chelator",
-      "smarts": "O=c1c(O)c(=O)",
-      "moa": "Integrase_Inhibitor"
+      "name": "Chloroacetamide",
+      "smarts": "ClCC(=O)N",
+      "moa": "Covalent_Inhibitor"
     },
     {
-      "name": "Diarylpyrimidine",
-      "smarts": "c1cnc(Nc2ccccc2)nc1Nc3ccccc3",
-      "moa": "NNRTI_Allosteric"
+      "name": "Vinyl_sulfonamide",
+      "smarts": "C=CS(=O)(=O)N",
+      "moa": "Covalent_Inhibitor"
     },
     {
-      "name": "Hydroxyethylamine_Isostere",
-      "smarts": "[NX3][CX4][CX4][OH1]",
-      "moa": "Transition_State_Mimic_PI"
+      "name": "Epoxide",
+      "smarts": "C1OC1",
+      "moa": "Covalent_Inhibitor"
+    },
+    {
+      "name": "Michael_Acceptor",
+      "smarts": "C=CC(=O)",
+      "moa": "Covalent_Inhibitor"
     }
   ],
 
   "Target_Specific_Rules": {
+    "Quinazoline_Core": "c1cc2ncnc(Nc3ccccc3)c2cc1",
     "Pyrimidine_Core": "c1cncnc1",
-    "Thiazole_Ring": "c1cscn1",
-    "Difluorobenzyl_Group": "c1c(F)cccc1F",
-    "Sulfonamide_Group": "S(=O)(=O)N",
-    "Hydroxyethylamine_Core": "[NX3][CX4][CX4][OH1]",
-    "Primary_Alcohol": "[CH2X4][OH1]",
-    "Fluorine": "[F]"
+    "Aniline_Group": "Nc1ccccc1",
+    "Fluorine": "[F]",
+    "Chlorine": "[Cl]",
+    "Bromine": "[Br]",
+    "Ether_Link": "COC"
   }
 }
