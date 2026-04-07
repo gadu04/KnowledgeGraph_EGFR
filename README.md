@@ -163,7 +163,7 @@ Nếu sử dụng code này, vui lòng cite:
 
 ```bibtex
 @software{drug_kg_2024,
-  author = {Your Name},
+  author = {gadu04},
   title = {Drug Knowledge Graph for EGFR Inhibitor Prediction},
   year = {2024},
   url = {https://github.com/gadu04/KnowledgeGraph_EGFR}
