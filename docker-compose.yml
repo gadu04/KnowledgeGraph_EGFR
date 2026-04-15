@@ -5,8 +5,8 @@ services:
     image: neo4j:5.15
     container_name: egfr_knowledge_graph
     ports:
-      - "7474:7474"
-      - "7687:7687"
+      - "7475:7474"
+      - "7688:7687"
     environment:
       - NEO4J_AUTH=neo4j/12345678
       - NEO4J_PLUGINS=["apoc", "graph-data-science"]
@@ -15,3 +15,7 @@ services:
       - NEO4J_dbms_memory_heap_max__size=2G
     volumes:
       - ./neo4j_data:/data
+
+#http://100.74.67.125:7475
+
+#neo4j/100.74.67.125:7688

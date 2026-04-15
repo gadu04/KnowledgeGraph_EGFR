@@ -69,6 +69,10 @@ cp .env.example .env
 docker-compose up -d
 ```
 
+Neo4j sẽ lắng nghe trên `bolt://localhost:7688` và mở web UI tại `http://localhost:7475`.
+
+Neo4j chạy ở `bolt://localhost:7688` trên máy host và `http://localhost:7475` cho giao diện web.
+
 ---
 
 ## 📊 Sử dụng
