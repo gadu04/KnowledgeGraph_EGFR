@@ -1,175 +1,169 @@
-# Drug Knowledge Graph for EGFR Inhibitor Prediction
+# KG-MF: Drug Knowledge Graph for EGFR Activity Prediction
 
-## 🎯 Giới thiệu
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) [![Python: 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/) [![Neo4j](https://img.shields.io/badge/Neo4j-Graph%20DB-brightgreen)](https://neo4j.com/)
 
-Dự án xây dựng **Knowledge Graph** cho dự đoán hoạt tính của chất ức chế EGFR, kết hợp:
-- **KANO Architecture**: Knowledge-Aware Neural Operator
-- **HGT Model**: Heterogeneous Graph Transformer
-- **GraphSAGE**: Graph Sample and Aggregate
-- **Neo4j**: Graph Database
+Hybrid scaffold-hopping pipeline for EGFR activity prediction. This repository combines:
 
----
+- MolDeBERTa-FT — SMILES-fine-tuned MolDeBERTa with focal loss and SMILES enumeration augmentation.
+- KG-MF — Rank-average fusion of MolDeBERTa-FT scores with a Neo4j knowledge-graph branch using feature-based KNN projection.
+- HGT — Heterogeneous Graph Transformer experiments for KG-aware GNN baselines.
+- GraphSAGE — GraphSAGE baselines and stability experiments.
 
-## 📂 Cấu trúc thư mục (REFACTORED)
+Table of Contents
+-----------------
+
+1. [Overview](#overview)
+2. [Repository Structure](#repository-structure)
+3. [Quickstart](#quickstart)
+4. [Usage](#usage)
+5. [Knowledge Graph Schema](#knowledge-graph-schema)
+6. [Results & Metrics](#results--metrics)
+7. [Troubleshooting](#troubleshooting)
+8. [Citation](#citation)
+9. [License](#license)
+
+Overview
+--------
+
+The project follows three design principles:
+
+1. Scaffold-based splitting to avoid leakage.
+2. A feature-based KG branch (not an end-to-end GNN) to preserve interpretability.
+3. Validation-only threshold tuning with untouched test evaluation.
+
+Repository Structure
+--------------------
+
+Simplified view (top-level):
 
 ```
-KnowledgeGraph_EGFR/
-├── src/                           # Source code
-│   ├── config/                    # Cấu hình toàn cục
-│   ├── kg/                        # Knowledge Graph builder
-│   ├── models/                    # ML Models (HGT, GraphSAGE)
-│   ├── preprocessing/             # Data preprocessing
-│   ├── evaluation/                # Model evaluation
-│   └── utils/                     # Utilities (chemistry.py)
-├── scripts/                       # Executable scripts
-│   └── build_kg.py                # Build Knowledge Graph
-├── notebooks/                     # Jupyter notebooks
-│   ├── experiments/               # Stability tests
-│   └── exploratory/               # Benchmark analysis
-├── data/
-│   ├── processed/                 # data_end.csv, DeNovo_Molecule.csv
-│   └── results/                   # multi_seed_results*.csv
-├── tests/                         # Unit tests
-├── archive/                       # Backup code cũ
-└── neo4j_data/                    # Neo4j database (gitignored)
+.
+├── src/                 # Source code: config, KG builder, models, utils
+├── scripts/             # Scripts (e.g., build_kg.py)
+├── notebooks/           # Notebooks for experiments and benchmarks
+├── data/                # Processed data and experiment results
+└── neo4j_data/          # Local Neo4j DB files (gitignored)
 ```
 
----
+Quickstart
+----------
 
-## 🚀 Cài đặt
+Prerequisites
 
-### Prerequisites
-- [Conda](https://docs.conda.io/projects/conda/en/latest/user-guide/install/) hoặc [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
-- [Docker](https://www.docker.com/) (cho Neo4j)
+- Conda or Miniconda
+- Docker (for Neo4j)
 
-### Bước 1: Clone repository
-
-```bash
-git clone https://github.com/gadu04/KnowledgeGraph_EGFR.git
-cd KnowledgeGraph_EGFR
-```
-
-### Bước 2: Tạo môi trường Conda
+Create and activate the environment:
 
 ```bash
 conda env create -f environment.yml
 conda activate egfr_ml
 ```
 
-### Bước 3: Cấu hình môi trường
+Copy and edit environment variables (set Neo4j password):
 
 ```bash
 cp .env.example .env
-# Chỉnh sửa .env với mật khẩu Neo4j của bạn
+# Edit .env to set NEO4J_PASSWORD and other vars
 ```
 
-### Bước 4: Khởi động Neo4j
+Start Neo4j (Docker):
 
 ```bash
 docker-compose up -d
 ```
 
----
+Default endpoints used by the project:
 
-## 📊 Sử dụng
+- Bolt: `bolt://localhost:7688`
+- Browser: `http://localhost:7475`
 
-### 1. Build Knowledge Graph
+Usage
+-----
+
+Build the knowledge graph from processed input data:
 
 ```bash
 python scripts/build_kg.py
 ```
 
-### 2. Chạy thí nghiệm
+Run experiments (examples):
 
-**HGT Model:**
-```bash
-jupyter notebook notebooks/experiments/stability_test_hgt.ipynb
-```
+- HGT stability tests: open `notebooks/experiments/stability_test_hgt.ipynb`
+- GraphSAGE stability tests: open `notebooks/experiments/stability_test_graphsage.ipynb`
+- Benchmarks: open `notebooks/exploratory/bench.ipynb`
 
-**GraphSAGE Model:**
-```bash
-jupyter notebook notebooks/experiments/stability_test_graphsage.ipynb
-```
+Knowledge Graph Schema
+----------------------
 
-**Benchmark:**
-```bash
-jupyter notebook notebooks/exploratory/bench.ipynb
-```
+Primary node types:
 
----
+- Molecule (experimental / virtual)
+- Scaffold (Murcko scaffold)
+- Target (e.g., EGFR_WT, EGFR_T790M)
+- Warhead (e.g., Acrylamide)
+- MoA (mechanism of action: covalent / reversible)
+- FunctionalGroup (e.g., Quinazoline_Core)
 
-## 🧪 Kiến trúc Knowledge Graph
+Core relationships:
 
-### Node Types
-- **Molecule**: Phân tử (experimental/virtual)
-- **Scaffold**: Murcko scaffold
-- **Target**: EGFR_WT, EGFR_T790M, EGFR_Generic
-- **Warhead**: Acrylamide, Propynamide, etc.
-- **MoA**: Covalent/Reversible Inhibitor
-- **FunctionalGroup**: Quinazoline_Core, Aniline_Group, etc.
+- (Molecule)-[:HAS_SCAFFOLD]->(Scaffold)
+- (Molecule)-[:TESTED_AGAINST]->(Target)
+- (Molecule)-[:POTENT_AGAINST]->(Target)  // active labels
+- (Molecule)-[:CONTAINS_WARHEAD]->(Warhead)
+- (Molecule)-[:ACTS_VIA]->(MoA)
+- (Molecule)-[:HAS_FUNCTIONAL_GROUP]->(FunctionalGroup)
 
-### Relationships
-- `(Molecule)-[:HAS_SCAFFOLD]->(Scaffold)`
-- `(Molecule)-[:TESTED_AGAINST]->(Target)`
-- `(Molecule)-[:POTENT_AGAINST]->(Target)` (active only)
-- `(Molecule)-[:CONTAINS_WARHEAD]->(Warhead)`
-- `(Molecule)-[:ACTS_VIA]->(MoA)`
-- `(Molecule)-[:HAS_FUNCTIONAL_GROUP]->(FunctionalGroup)`
+Results & Metrics
+-----------------
 
----
+Experiment outputs are stored under `data/results/`:
 
-## 📈 Kết quả
+- `multi_seed_results.csv` — HGT (10 seeds)
+- `multi_seed_results_graphsage.csv` — GraphSAGE
+- `multi_seed_results_corrected.csv` — Corrected/merged results
 
-Kết quả thí nghiệm trong [`data/results/`](data/results):
-- [`multi_seed_results.csv`](data/results/multi_seed_results.csv) - HGT (10 seeds)
-- [`multi_seed_results_graphsage.csv`](data/results/multi_seed_results_graphsage.csv) - GraphSAGE
-- [`multi_seed_results_corrected.csv`](data/results/multi_seed_results_corrected.csv) - Corrected
+Reported metrics include: Accuracy, Precision, Recall, F1-score, ROC-AUC.
 
-**Metrics:** Accuracy, Precision, Recall, F1-score, ROC-AUC
+Troubleshooting
+---------------
 
----
+- RDKit import error:
 
-## 🔐 Bảo mật
-
-⚠️ **KHÔNG BAO GIỜ commit file `.env` lên Git!**
-
-File [`.gitignore`](.gitignore) đã được cấu hình để bỏ qua file này.
-
----
-
-## 🐛 Troubleshooting
-
-**Lỗi RDKit import:**
 ```bash
 conda install -c conda-forge rdkit
 ```
 
-**Lỗi Neo4j connection:**
+- Neo4j connection issues:
+
 ```bash
 docker ps
 docker logs <container_id>
 docker-compose restart
 ```
 
-**Lỗi PyTorch Geometric:**
+- PyTorch Geometric installation (CPU example):
+
 ```bash
 pip install torch-scatter torch-sparse torch-cluster -f https://data.pyg.org/whl/torch-2.0.0+cpu.html
 pip install torch-geometric
 ```
 
-## 📝 Citation
+Citation
+--------
 
-Nếu sử dụng code này, vui lòng cite:
+If you use this code, please cite:
 
 ```bibtex
 @software{drug_kg_2024,
-  author = {Your Name},
-  title = {Drug Knowledge Graph for EGFR Inhibitor Prediction},
+  author = {gadu04},
+  title = {KG-MF: Drug Knowledge Graph for EGFR Activity Prediction},
   year = {2024},
   url = {https://github.com/gadu04/KnowledgeGraph_EGFR}
 }
 ```
 
-## 📄 License
+License
+-------
 
-MIT License - xem file LICENSE để biết chi tiết.
+This project is released under the MIT License. See the `LICENSE` file for details.
